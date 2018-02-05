@@ -1,30 +1,58 @@
-const rows = 20;
-const columns = 10;
+const rows = 22;
+const cells = 10;
+const borderSize = 1;
 
-let tetris = document.getElementById('tetris');
+let matrix = document.getElementById('tetris');
+let cellSize = Math.min((matrix.clientHeight - borderSize * 2) / rows, (matrix.clientWidth - borderSize * 2) / cells);
 
-let blockSize = Math.min(tetris.clientHeight / rows, tetris.clientWidth / columns);
+matrix.style.position = 'relative';
+matrix.style.height = cellSize * rows + 'px';
+matrix.style.width = cellSize * cells + 'px';
+matrix.style.borderWidth = borderSize + 'px';
+matrix.style.borderStyle = 'solid';
+matrix.style.borderColor = 'grey';
 
-tetris.style.position = 'relative';
-tetris.style.height = blockSize * rows + 'px';
-tetris.style.width = blockSize * columns + 'px';
-tetris.style.border = '1px solid grey';
-tetris.style.boxSizing = 'border-box';
+function createMino(row, cell, backgroundColor) {
+  let mino = document.createElement('div');
+  mino.style.height = cellSize + 'px';
+  mino.style.width = cellSize + 'px';
+  mino.style.position = 'absolute';
+  mino.style.backgroundColor = backgroundColor;
+  moveMino(mino, row, cell);
+  matrix.appendChild(mino);
+  return mino;
+}
 
-let colorValue = 0;
-let step = Math.floor(255 / (rows * columns));
+function moveMino(mino, row, cell) {
+  mino.style.top = cellSize * row + 'px';
+  mino.style.left = cellSize * cell + 'px';
+  mino.dataset.row = row;
+  mino.dataset.cell = cell;
+}
 
-for (let row = 0; row < rows; row++) {
-  let top = blockSize * row + 'px';
-  for (let column = 0; column < columns; column++) {
-    let block = document.createElement('div');
-    block.style.height = blockSize + 'px';
-    block.style.width = blockSize + 'px';
-    block.style.position = 'absolute';
-    block.style.top = top;
-    block.style.left = blockSize * column + 'px';
-    block.style.backgroundColor = `rgb(${colorValue},${colorValue},${colorValue})`;
-    tetris.appendChild(block);
-    colorValue += step;
+function createITetrimino() {
+  let tetrimino = [];
+  tetrimino.push(createMino(1, 3, 'black'));
+  tetrimino.push(createMino(1, 4, 'black'));
+  tetrimino.push(createMino(1, 5, 'black'));
+  tetrimino.push(createMino(1, 6, 'black'));
+  return tetrimino;
+}
+
+let currentTetrimino = createITetrimino();
+
+let dropTimer = window.setInterval(drop, 1000);
+
+function drop() {
+  if (!currentTetrimino) {
+    return;
+  }
+
+  if (parseInt(currentTetrimino[0].dataset.row) < rows - 1) {
+    for (let mino of currentTetrimino) {
+      moveMino(mino, parseInt(mino.dataset.row) + 1, parseInt(mino.dataset.cell));
+    }
+  } else {
+    currentTetrimino = null;
   }
 }
