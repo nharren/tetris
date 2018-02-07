@@ -2,6 +2,12 @@ const rows = 22;
 const cells = 10;
 const borderSize = 1;
 
+let tetrimino;
+let orientation;
+let type;
+let template;
+let origin;
+
 let matrix = document.getElementById('tetris');
 let cellSize = Math.min((matrix.clientHeight - borderSize * 2) / rows, (matrix.clientWidth - borderSize * 2) / cells);
 matrix.style.position = 'relative';
@@ -22,13 +28,20 @@ function createMino(row, cell, backgroundColor) {
   return mino;
 }
 
-function createITetrimino() {
-  return [
-    createMino(1, 3, 'black'),
-    createMino(1, 4, 'black'),
-    createMino(1, 5, 'black'),
-    createMino(1, 6, 'black')
-  ]
+function createI() {
+  orientation = 0;
+  type = 'I';
+  template = [
+    [1,0],
+    [1,1],
+    [1,2],
+    [1,3]
+  ];
+  origin = [0,3];
+  tetrimino = [];
+  for (let point of template) {
+    tetrimino.push(createMino(origin[0] + point[0], origin[1] + point[1], 'black'));
+  }
 }
 
 function moveMino(mino, row, cell) {
@@ -49,11 +62,11 @@ function getMinoCell(mino) {
 
 
 function getMinoCells() {
-  return currentTetrimino.map(getMinoCell);
+  return tetrimino.map(getMinoCell);
 }
 
 function getMinoRows() {
-  return currentTetrimino.map(getMinoRow);
+  return tetrimino.map(getMinoRow);
 }
 
 
@@ -70,60 +83,129 @@ function getMaxMinoRow() {
 }
 
 
-function canMoveTetriminoDown() {
+function canMoveDown() {
   return getMaxMinoRow() < rows - 1;
 }
 
-function canMoveTetriminoLeft() {
-  return getMinMinoCell() > 0 && canMoveTetriminoDown();
+function canMoveLeft() {
+  return getMinMinoCell() > 0 && canMoveDown();
 }
 
-function canMoveTetriminoRight() {
-  return getMaxMinoCell() + 1 < cells && canMoveTetriminoDown();
+function canMoveRight() {
+  return getMaxMinoCell() + 1 < cells && canMoveDown();
 }
 
 
-function moveTetrimino(rowDelta, cellDelta) {
-  for (let mino of currentTetrimino) {
+function move(rowDelta, cellDelta) {
+  for (let mino of tetrimino) {
     moveMino(mino, getMinoRow(mino) + rowDelta, getMinoCell(mino) + cellDelta);
   }
 }
 
 
-function moveTetriminoDown() {
-  moveTetrimino(1, 0);
+function moveDown() {
+  move(1, 0);
 }
 
-function moveTetriminoLeft() {
-  moveTetrimino(0, -1);
+function moveLeft() {
+  move(0, -1);
 }
 
-function moveTetriminoRight() {
-  moveTetrimino(0, 1);
+function moveRight() {
+  move(0, 1);
+}
+
+
+
+
+
+function canRotateClockwise() {
+  switch (type) {
+    case 'I':
+      return canRotateIClockwise();
+    default:
+      break;
+  }
+}
+
+function canRotateIClockwise() {
+  for (let rotationPoint of rotationPointsI) {
+
+  }
+}
+
+function canRotateCounterclockwise() {
+
+}
+
+
+const rotationPointsI = [
+  [
+    [1,1],
+    [1,0],
+    [1,3],
+    [1,0],
+    [1,3]
+  ],
+  [
+    [1,1],
+    [1,2],
+    [1,2],
+    [0,2],
+    [3,2]
+  ],
+  [
+    [1,1],
+    [1,3],
+    [0,1],
+    [2,3],
+    [3,0]
+  ],
+  [
+    [1,1],
+    [1,1],
+    [1,1],
+    [3,1],
+    [0,1]
+  ]
+];
+
+
+function rotateClockwise() {
+  orientation = (orientation + 1) % 4;
+}
+
+function rotateCounterclockwise() {
+  orientation = (orientation - 1) % 4;
 }
 
 
 function handleKeyDown(e) {
-  if (!currentTetrimino) {
+  if (!tetrimino) {
     return;
   }
 
   switch (e.key) {
     case 'ArrowLeft':
-    case 'a':
-      if (canMoveTetriminoLeft())
-        moveTetriminoLeft();
+      if (canMoveLeft())
+        moveLeft();
       break;
     case 'ArrowRight':
-    case 'd':
-      if (canMoveTetriminoRight())
-        moveTetriminoRight();
+      if (canMoveRight())
+        moveRight();
       break;
     case 'ArrowDown':
-    case 's':
-      if (canMoveTetriminoDown())
-        moveTetriminoDown();
+      if (canMoveDown())
+        moveDown();
       break;
+    case 'ArrowUp':
+    case 'x':
+      if (canRotateClockwise())
+        rotateClockwise();
+      break;
+    case 'Control':
+      if (canRotateCounterclockwise())
+        rotateCounterclockwise();
     default:
       break;
   }
@@ -131,17 +213,17 @@ function handleKeyDown(e) {
 }
 
 function handleDropTimerTick() {
-  if (!currentTetrimino) {
+  if (!tetrimino) {
     return;
   }
 
-  if (canMoveTetriminoDown()) {
-    moveTetriminoDown();
+  if (canMoveDown()) {
+    moveDown();
   } else {
-    currentTetrimino = null;
+    tetrimino = null;
   }
 }
 
-let currentTetrimino = createITetrimino();
+createI();
 document.addEventListener('keydown', handleKeyDown);
 let dropTimer = window.setInterval(handleDropTimerTick, 1000);
