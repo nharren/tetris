@@ -10,11 +10,72 @@ const orientations = {
   west: 3
 }
 
+const oTemplates = [
+  [[1,0], [1,1], [2,0], [2,1]],
+  [[1,0], [1,1], [2,0], [2,1]],
+  [[1,0], [1,1], [2,0], [2,1]],
+  [[1,0], [1,1], [2,0], [2,1]]
+];
+
 const iTemplates = [
   [[0,1], [1,1], [2,1], [3,1]],
   [[2,0], [2,1], [2,2], [2,3]],
   [[0,2], [1,2], [2,2], [3,2]],
   [[1,0], [1,1], [1,2], [1,3]]
+];
+
+const tTemplates = [
+  [[1,0], [0,1], [1,1], [2,1]],
+  [[1,0], [1,1], [2,1], [1,2]],
+  [[0,1], [1,1], [1,2], [2,1]],
+  [[1,0], [0,1], [1,1], [1,2]]
+];
+
+const lTemplates = [
+  [[0,1], [1,1], [2,1], [2,0]],
+  [[1,0], [1,1], [1,2], [2,2]],
+  [[0,1], [1,1], [2,1], [0,2]],
+  [[0,0], [1,0], [1,1], [1,2]]
+];
+
+const jTemplates = [
+  [[0,0], [0,1], [1,1], [2,1]],
+  [[1,0], [1,1], [1,2], [2,0]],
+  [[0,1], [1,1], [2,1], [2,2]],
+  [[0,2], [1,0], [1,1], [1,2]]
+];
+
+const sTemplates = [
+  [[0,1], [1,1], [1,0], [2,0]],
+  [[1,0], [1,1], [2,1], [2,2]],
+  [[0,2], [1,1], [1,2], [2,1]],
+  [[0,0], [0,1], [1,1], [1,2]]
+];
+
+const zTemplates = [
+  [[0,0], [1,0], [1,1], [2,1]],
+  [[2,0], [2,1], [1,1], [1,2]],
+  [[0,1], [1,1], [1,2], [2,2]],
+  [[0,2], [0,1], [1,1], [1,0]]
+];
+
+const kicks = [
+  [
+    [[0,0], [1,0], [1,1], [0,-2], [1,-2]],
+    [[0,0], [-1,0], [-1,1], [0,-2], [-1,-2]]
+  ],
+  [
+    [[0,0], [1,0], [1,-1], [0,2], [1,2]],
+    [[0,0], [1,0], [1,-1], [0,2], [1,2]]
+  ],
+  [
+    [[0,0], [-1,0], [-1,1], [0,-2], [-1,-2]],
+    [[0,0], [1,0], [1,1], [0,-2], [1,-2]]
+  ],
+  [
+    [[0,0], [-1,0], [-1,-1], [0,2], [-1,2]],
+    [[0,0], [-1,0], [-1,-1], [0,2], [-1,2]]
+  ]
 ];
 
 // iKicks[orientation][ccw/cw][attempt]
@@ -35,9 +96,7 @@ const iKicks = [
     [[0,0], [-2,0], [1,0], [-2,-1], [1,2]],
     [[0,0], [1,0], [-2,0], [1,-2], [-2,1]]
   ]
-]
-
-const kicks = [];
+];
 
 let tetromino;
 let orientation;
@@ -47,6 +106,7 @@ let templates;
 let origin;
 let kick = [0,0];
 let color;
+let bag = [];
 
 let matrix = document.getElementById('tetris');
 let cellSize = getCellSize();
@@ -77,20 +137,68 @@ function getMatrixDesiredHeight() {
   return matrix.clientWidth - doubleBorderWidth;
 }
 
-function createMino(cell, row, backgroundColor) {
+function createMino(cell, row) {
   let mino = document.createElement('div');
   mino.classList.add('mino', 'active');
-  mino.style.height = cellSize + 'px';
-  mino.style.width = cellSize + 'px';
+  mino.style.height = cellSize - doubleBorderWidth + 'px';
+  mino.style.width = cellSize - doubleBorderWidth + 'px';
   mino.style.position = 'absolute';
-  mino.style.backgroundColor = backgroundColor;
+  mino.style.backgroundColor = color;
+  mino.style.border = '1px solid rgba(0,0,0,0.1)';
   moveMino(mino, cell, row);
   matrix.appendChild(mino);
   return mino;
 }
 
+
+function generateBag() {
+  return shuffle([...generators]);
+}
+
+function shuffle(array) {
+  for (let i = array.length - 1; i >= 0; i--) {
+    swap(getRandomInt(i + 1), i, array);
+  }
+  return array;
+}
+
+function swap(i, j, array) {
+  let temp = array[i];
+  array[i] = array[j];
+  array[j] = temp;
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+
 function generate() {
-  generateI();
+  if (bag.length === 0) {
+    bag = generateBag();
+  }
+
+  bag.pop()();
+}
+
+const generators = [
+  generateO,
+  generateI,
+  generateT,
+  generateL,
+  generateJ,
+  generateS,
+  generateZ
+]
+
+function generateO() {
+  orientation = orientations.north;
+  type = 'O';
+  templates = oTemplates;
+  origin = [3,0];
+  color = 'yellow';
+  template = templates[orientation];
+  tetromino = create();
 }
 
 function generateI() {
@@ -103,8 +211,58 @@ function generateI() {
   tetromino = create();
 }
 
+function generateT() {
+  orientation = orientations.north;
+  type = 'T';
+  templates = tTemplates;
+  origin = [3,0];
+  color = 'purple';
+  template = templates[orientation];
+  tetromino = create();
+}
+
+function generateL() {
+  orientation = orientations.north;
+  type = 'L';
+  templates = lTemplates;
+  origin = [3,0];
+  color = 'orange';
+  template = templates[orientation];
+  tetromino = create();
+}
+
+function generateJ() {
+  orientation = orientations.north;
+  type = 'J';
+  templates = jTemplates;
+  origin = [3,0];
+  color = 'blue';
+  template = templates[orientation];
+  tetromino = create();
+}
+
+function generateS() {
+  orientation = orientations.north;
+  type = 'S';
+  templates = sTemplates;
+  origin = [3,0];
+  color = 'green';
+  template = templates[orientation];
+  tetromino = create();
+}
+
+function generateZ() {
+  orientation = orientations.north;
+  type = 'Z';
+  templates = zTemplates;
+  origin = [3,0];
+  color = 'red';
+  template = templates[orientation];
+  tetromino = create();
+}
+
 function create() {
-  return peek(template).map(point => createMino(...point, color));
+  return peek(template).map(point => createMino(...point));
 }
 
 function calculateMinoPoint(point) {
@@ -288,11 +446,11 @@ function getActiveMinos() {
 }
 
 function getInactiveMinos() {
-  return matrix.querySelectorAll('.mino:not(.active)');
+  return [...matrix.querySelectorAll('.mino:not(.active)')];
 }
 
 function getInactiveMinoPoints() {
-  return [...getInactiveMinos()].map(getMinoPoint);
+  return getInactiveMinos().map(getMinoPoint);
 }
 
 
@@ -391,8 +549,36 @@ function handleDropTimerTick() {
     moveDown();
   } else {
     inactivate();
+    clearLines();
     generate();
   }
+}
+
+function clearLines() {
+  for (let row = 0; row <= getMaxInactiveMinoRow(getInactiveMinos()); row++) {
+    let inactiveMinos = getInactiveMinos();
+    let minosInRow = getMinosInRow(row, inactiveMinos);
+    if (isCompleteRow(minosInRow)) {
+      removeMinos(minosInRow);
+      moveInactiveMinosDown(row, inactiveMinos);
+    }
+  }
+}
+
+function isCompleteRow(minosInRow) {
+  return minosInRow.length === 10;
+}
+
+function getMinosInRow(row, inactiveMinos) {
+  return inactiveMinos.filter(m => getMinoRow(m) === row);
+}
+
+function moveInactiveMinosDown(startRow, inactiveMinos) {
+  inactiveMinos.filter(m => getMinoRow(m) <= startRow).forEach(m => moveMino(m, getMinoCell(m), getMinoRow(m) + 1));
+}
+
+function getMaxInactiveMinoRow(inactiveMinos) {
+  return Math.max(...inactiveMinos.map(getMinoRow));
 }
 
 function inactivate() {
@@ -405,6 +591,6 @@ function setMinoInactive(mino) {
 }
 
 
-generateI();
+generate();
 document.addEventListener('keydown', handleKeyDown);
 let dropTimer = window.setInterval(handleDropTimerTick, 1000);
